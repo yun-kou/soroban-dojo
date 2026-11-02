@@ -1,5 +1,5 @@
 // オフライン対応。アプリ本体はネット優先（更新がすぐ届く）、アイコン・フォント・音声はキャッシュ優先。
-const CACHE = "soroban-dojo-v1";
+const CACHE = "soroban-dojo-v3";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {

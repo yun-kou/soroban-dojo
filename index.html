@@ -22,17 +22,18 @@
   --bg:#E9F3F0; --surface:#FFFFFF; --sunk:#DCEBE6; --ink:#1D2939; --muted:#56687A; --line:#C6DAD4;
   --primary:#1F5FCC; --on-primary:#FFFFFF; --bead:#9A5A33; --bead-hi:#C8865A; --face:#2A170C;
   --red:#D9362E; --gold:#E3A100; --ok:#178A55; --cheek:#F29C9C; --rod:#7C8B96;
+  --board:#173A30; --chalk:#F5F8F2; --chalk-neg:#FF9A8F;
   --f-ui:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --f-num:"M PLUS 1 Code","SFMono-Regular",Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10181D; --surface:#19242B; --sunk:#223039; --ink:#E9F0F3; --muted:#9DB0BC; --line:#2D3D47;
   --primary:#6A9DF7; --on-primary:#0B1520; --bead:#C08055; --bead-hi:#DFA67C; --face:#24130A;
-  --red:#FF6A60; --gold:#FFC83A; --ok:#4FCB8D; --cheek:#F4A3A3; --rod:#5E6D78; color-scheme:dark}}
+  --red:#FF6A60; --gold:#FFC83A; --ok:#4FCB8D; --cheek:#F4A3A3; --rod:#5E6D78; --board:#0F2620; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10181D; --surface:#19242B; --sunk:#223039; --ink:#E9F0F3; --muted:#9DB0BC; --line:#2D3D47;
   --primary:#6A9DF7; --on-primary:#0B1520; --bead:#C08055; --bead-hi:#DFA67C; --face:#24130A;
-  --red:#FF6A60; --gold:#FFC83A; --ok:#4FCB8D; --cheek:#F4A3A3; --rod:#5E6D78; color-scheme:dark}
+  --red:#FF6A60; --gold:#FFC83A; --ok:#4FCB8D; --cheek:#F4A3A3; --rod:#5E6D78; --board:#0F2620; color-scheme:dark}
 [hidden]{display:none!important}
 html,body{background:var(--bg);color:var(--ink)}
 body{margin:0;font-family:var(--f-ui);font-size:16px;line-height:1.6;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
@@ -136,6 +137,12 @@ ruby rt{font-size:.5em;font-weight:700;color:var(--muted)}
 .combo{font-weight:900;color:var(--gold)}
 .small-link{font-weight:700;color:var(--primary);text-decoration:underline;padding:6px}
 
+/* flash: chalkboard; numbers right-aligned in a fixed-width box so place values never shift */
+.board{width:100%;min-height:min(52vh,400px);border-radius:22px;background:var(--board);display:grid;place-items:center;overflow:hidden;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--board) 70%,#000)}
+.flashnum{font-family:var(--f-num);font-weight:700;color:var(--chalk);line-height:1;font-variant-numeric:tabular-nums;text-align:right;width:calc(var(--ch) * 1ch);font-size:min(calc((min(100vw,540px) - 72px) / var(--ch) / .62),9rem)}
+.flashnum.neg{color:var(--chalk-neg)}
+.flashnum.cd{width:auto;font-size:5rem;opacity:.55}
+
 /* result */
 .score{font-size:3.4rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
 .score small{font-size:1.4rem;color:var(--muted)}
@@ -179,7 +186,15 @@ ruby rt{font-size:.5em;font-weight:700;color:var(--muted)}
 .badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .badges span{background:var(--gold);color:#3a2600;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:900}
 
-/* stickers */
+/* stickers: friends row (unlocked by passing a grade) above emoji series */
+.series{font-size:1.05rem;font-weight:900;margin:6px 0 0}
+.friends{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.friend{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:6px 4px 8px;text-align:center;font-weight:900;font-size:.8rem;line-height:1.3}
+.friend svg{width:100%;max-width:88px;height:auto;display:block;margin:0 auto}
+.friend.got{border:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
+.friend.lock svg{filter:grayscale(1);opacity:.22}
+.friend.lock{color:var(--muted)}
+.cert .friend-new{width:120px;height:auto}
 .stickers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .stickers div{aspect-ratio:1;border-radius:50%;background:var(--surface);border:2px dashed var(--line);display:grid;place-items:center;font-size:2.2rem;position:relative;max-width:100%}
 .stickers div.got{border:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--surface))}
@@ -238,20 +253,40 @@ const SPEEDS={slow:{rate:.85,gap:950,label:"ゆっくり"},normal:{rate:1,gap:65
 const MODES={
   yomi:{kanji:"読上算",kana:"よみあげざん",voice:true,hint:"きいて そろばんで けいさん"},
   anzan:{kanji:"読上暗算",kana:"よみあげあんざん",voice:true,hint:"きいて あたまの なかで けいさん"},
-  mitori:{kanji:"見取算",kana:"みとりざん",voice:false,hint:"みて そろばんで けいさん"}
+  mitori:{kanji:"見取算",kana:"みとりざん",voice:false,hint:"みて そろばんで けいさん"},
+  flash:{kanji:"フラッシュ暗算",kana:"ふらっしゅあんざん",voice:false,flash:true,ruby:"フラッシュ<ruby>暗算<rt>あんざん</rt></ruby>",hint:"みて あたまの なかで けいさん"}
 };
 const t=(min,max,k,sub,speed)=>({min,max,k,sub:!!sub,speed});
+const fl=(d,k,sec)=>({min:d,max:d,k,sub:false,sec});
 // 仮の級別基準（せっていで変更できる）
 const DEF={
   yomi:{"10":t(1,1,5,0,"slow"),"9":t(1,1,10,0,"slow"),"8":t(2,2,5,0,"slow"),"7":t(2,2,10,0,"normal"),"6":t(2,2,10,1,"normal"),"5":t(2,3,10,1,"normal"),"4":t(3,3,10,1,"normal"),"3":t(3,4,10,1,"fast"),"2":t(3,5,10,1,"fast"),"1":t(3,6,10,1,"fast")},
   anzan:{"10":t(1,1,3,0,"slow"),"9":t(1,1,5,0,"slow"),"8":t(1,1,5,1,"slow"),"7":t(1,1,10,1,"normal"),"6":t(2,2,3,0,"normal"),"5":t(2,2,5,0,"normal"),"4":t(2,2,5,1,"normal"),"3":t(2,2,7,1,"normal"),"2":t(2,3,7,1,"fast"),"1":t(2,3,10,1,"fast")},
-  mitori:{"10":t(1,1,5,0,"normal"),"9":t(1,1,10,0,"normal"),"8":t(1,2,10,0,"normal"),"7":t(2,2,10,0,"normal"),"6":t(2,3,10,1,"normal"),"5":t(3,4,10,1,"normal"),"4":t(3,5,10,1,"normal"),"3":t(3,6,10,1,"normal"),"2":t(3,7,10,1,"normal"),"1":t(4,8,10,1,"normal")}
+  mitori:{"10":t(1,1,5,0,"normal"),"9":t(1,1,10,0,"normal"),"8":t(1,2,10,0,"normal"),"7":t(2,2,10,0,"normal"),"6":t(2,3,10,1,"normal"),"5":t(3,4,10,1,"normal"),"4":t(3,5,10,1,"normal"),"3":t(3,6,10,1,"normal"),"2":t(3,7,10,1,"normal"),"1":t(4,8,10,1,"normal")},
+  flash:{"10":fl(1,3,5),"9":fl(1,5,6),"8":fl(1,7,7),"7":fl(1,10,8),"6":fl(1,10,6),"5":fl(1,15,8),"4":fl(2,5,6),"3":fl(2,10,10),"2":fl(2,15,12),"1":fl(3,15,15)}
 };
-const STICKERS=["🍓","🍙","🐶","🐱","🦊","🐼","🐸","🐧","🦖","🚀","🌈","⭐","🍩","🍦","🎈","🐳","🦄","🌻","🚃","🍉","🐝","🦁","🍰","👑"];
+const SERIES=[
+  {name:"いきもの・たべもの",list:["🍓","🍙","🐶","🐱","🦊","🐼","🐸","🐧","🦖","🚀","🌈","⭐","🍩","🍦","🎈","🐳","🦄","🌻","🚃","🍉","🐝","🦁","🍰","👑"]},
+  {name:"ゆうえんち",list:["🏰","🎠","🎡","🎢","🎪","🎆","🎀","🧁","🍭","🍿","🪄","🎺"]}
+];
+const STICKERS=SERIES.flatMap(x=>x.list);
+// たまちゃんの なかま：その級に（どのしゅもくでも）はじめて合格すると会える
+const FRIENDS=[
+  {g:"10",name:"リボンちゃん",c:"#E58FA8",hi:"#F7C3D2",acc:'<path d="M60 12 L41 1 L43 23Z M60 12 L79 1 L77 23Z" fill="#E5484D"/><circle cx="60" cy="12" r="5.5" fill="#B8323A"/>'},
+  {g:"9",name:"ハットくん",c:"#6F8FD6",hi:"#A8C0F0",acc:'<rect x="38" y="8" width="44" height="6" rx="3" fill="#2B2B33"/><rect x="46" y="-16" width="28" height="26" rx="3" fill="#2B2B33"/><rect x="46" y="1" width="28" height="5" fill="#D9362E"/>'},
+  {g:"8",name:"はなちゃん",c:"#5DBB98",hi:"#9BDDC2",acc:[0,1,2,3,4].map(i=>{const a=i/5*Math.PI*2;return`<circle cx="${(88+8*Math.cos(a)).toFixed(1)}" cy="${(22+8*Math.sin(a)).toFixed(1)}" r="6" fill="#FFD34D"/>`}).join("")+'<circle cx="88" cy="22" r="5" fill="#E86A33"/>'},
+  {g:"7",name:"めがねくん",c:"#E0915A",hi:"#F2BD93",acc:'<g fill="none" stroke="#2B2B33" stroke-width="3"><circle cx="45" cy="45" r="10"/><circle cx="75" cy="45" r="10"/><path d="M55 44 Q60 40 65 44"/></g>'},
+  {g:"6",name:"ほしちゃん",c:"#A487D8",hi:"#CDB8F0",acc:'<path transform="translate(72 4) scale(1.2)" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" fill="#FFC83A" stroke="#E3A100" stroke-width="1"/>'},
+  {g:"5",name:"ねこたま",c:"#E2B35C",hi:"#F2D493",back:'<path d="M26 34 L24 6 L50 20Z M94 34 L96 6 L70 20Z" fill="#E2B35C"/><path d="M30 28 L29 13 L43 21Z M90 28 L91 13 L77 21Z" fill="#F29C9C"/>',acc:'<g stroke="var(--face)" stroke-width="1.6" stroke-linecap="round"><path d="M22 52 L8 50M22 57 L9 60M98 52 L112 50M98 57 L111 60"/></g>'},
+  {g:"4",name:"うさたま",c:"#EBC7D4",hi:"#FAE6EE",back:'<ellipse cx="45" cy="0" rx="9" ry="24" fill="#EBC7D4" transform="rotate(-12 45 0)"/><ellipse cx="75" cy="0" rx="9" ry="24" fill="#EBC7D4" transform="rotate(12 75 0)"/><ellipse cx="45" cy="0" rx="4" ry="16" fill="#F29C9C" transform="rotate(-12 45 0)"/><ellipse cx="75" cy="0" rx="4" ry="16" fill="#F29C9C" transform="rotate(12 75 0)"/>'},
+  {g:"3",name:"まほうくん",c:"#4F6FC0",hi:"#8AA4E3",acc:'<path d="M36 17 L66 -24 L86 15Z" fill="#5B4BB7"/><ellipse cx="61" cy="16" rx="31" ry="5" fill="#463A94"/><circle cx="58" cy="0" r="2.5" fill="#FFD34D"/><circle cx="70" cy="-10" r="2" fill="#FFD34D"/><circle cx="68" cy="7" r="2" fill="#FFD34D"/>'},
+  {g:"2",name:"コックさん",c:"#F0A58C",hi:"#F8CDBE",acc:'<g fill="#fff" stroke="#CFCFCF" stroke-width="1.5"><circle cx="47" cy="-2" r="10"/><circle cx="73" cy="-2" r="10"/><circle cx="60" cy="-8" r="12"/><rect x="44" y="0" width="32" height="14" rx="2"/></g>'},
+  {g:"1",name:"おうさま",c:"#B86B3C",hi:"#DA9A6E",acc:'<path d="M38 15 L38 -6 L49 4 L60 -13 L71 4 L82 -6 L82 15Z" fill="#E3A100" stroke="#B57F00" stroke-width="1.5" stroke-linejoin="round"/><circle cx="60" cy="7" r="3.5" fill="#D9362E"/><circle cx="47" cy="9" r="2.5" fill="#1F5FCC"/><circle cx="73" cy="9" r="2.5" fill="#1F5FCC"/>'}
+];
 const KEY="soroban-dojo-v1";
 function blank(){return{v:1,updatedAt:0,name:"",
-  settings:{voiceURI:"",enNari:true,negai:true,perSet:5,sfx:true,speedAdj:0,mitoriLimit:0},
-  grade:{yomi:"10",anzan:"10",mitori:"10"},table:{},days:{},stickers:{},run:{},passed:{},best:{}}}
+  settings:{voiceURI:"",enNari:true,negai:true,perSet:5,sfx:true,speedAdj:0,mitoriLimit:0,flashOn:70,flashBeep:true,flashCount:true},
+  grade:{yomi:"10",anzan:"10",mitori:"10",flash:"10"},table:{},days:{},stickers:{},run:{},passed:{},best:{}}}
 function merge(r){const b=blank();return{...b,...r,settings:{...b.settings,...(r.settings||{})},grade:{...b.grade,...(r.grade||{})}}}
 let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r&&r.v===1)return merge(r)}catch(e){}return blank()})();
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -268,7 +303,8 @@ const digitsText=sp=>sp.min===sp.max?`${sp.min}`:`${sp.min}〜${sp.max}`;
 /* ---------- problems ---------- */
 function randNum(d){let s=String(1+rnd(9));for(let i=1;i<d;i++)s+=rnd(10);return BigInt(s)}
 const pickD=sp=>sp.min+rnd(sp.max-sp.min+1);
-function gen(sp){
+function samePlace(a,b){const x=a.toString(),y=b.toString();for(let i=1;i<=Math.min(x.length,y.length);i++)if(x[x.length-i]===y[y.length-i])return true;return false}
+function gen(sp,distinct){
   for(let tries=0;tries<300;tries++){
     const items=[];let tot=0n,minus=0;
     while(items.length<sp.k){
@@ -278,6 +314,7 @@ function gen(sp){
         if(v<=tot)sign=-1;
       }
       if(items.length&&items[items.length-1].v===v)continue;
+      if(distinct&&items.length&&samePlace(items[items.length-1].v,v))continue;
       tot+=sign>0?v:-v;if(sign<0)minus++;
       items.push({v,sign});
     }
@@ -327,7 +364,7 @@ document.addEventListener("pointerdown",()=>{if(unlocked)return;unlocked=true;ac
 let ac=null;
 function actx(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
 function tone(f,t0,dur,type="sine",vol=.2){const a=actx();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;const s=a.currentTime+t0;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(vol,s+.02);g.gain.exponentialRampToValueAtTime(.0001,s+dur);o.connect(g).connect(a.destination);o.start(s);o.stop(s+dur+.05)}
-const SFX={ok(){tone(1318,0,.28);tone(1046,.2,.6)},ng(){tone(196,0,.18,"square",.07);tone(185,.2,.3,"square",.07)},fan(){[523,659,784].forEach((f,i)=>tone(f,i*.13,.3,"triangle",.18));tone(1046,.42,.9,"triangle",.2)},tap(){tone(700,0,.05,"sine",.04)}};
+const SFX={ok(){tone(1318,0,.28);tone(1046,.2,.6)},ng(){tone(196,0,.18,"square",.07);tone(185,.2,.3,"square",.07)},fan(){[523,659,784].forEach((f,i)=>tone(f,i*.13,.3,"triangle",.18));tone(1046,.42,.9,"triangle",.2)},tap(){tone(700,0,.05,"sine",.04)},pi(){tone(1760,0,.05,"sine",.08)},cd(){tone(880,0,.08,"sine",.1)}};
 const sfx=n=>{if(S.settings.sfx)SFX[n]()};
 
 /* ---------- graphics ---------- */
@@ -340,6 +377,14 @@ function mascot(){return`<svg class="mascot" viewBox="0 0 120 90" aria-hidden="t
 <g class="eyes-o" fill="none" stroke="var(--face)" stroke-width="3" stroke-linecap="round"><path d="M40 43 L50 47"/><path d="M80 43 L70 47"/></g>
 <ellipse cx="36" cy="54" rx="5" ry="3" fill="var(--cheek)"/><ellipse cx="84" cy="54" rx="5" ry="3" fill="var(--cheek)"/>
 <path d="M55 54 Q60 59 65 54" fill="none" stroke="var(--face)" stroke-width="2.5" stroke-linecap="round"/></svg>`}
+function friendSVG(f,cls=""){return`<svg class="${cls}" viewBox="0 -26 120 116" aria-hidden="true">
+<rect x="56" y="-4" width="8" height="94" rx="3" fill="var(--rod)"/>${f.back||""}
+<path d="M8 45 Q8 37 21 31 L47 18 Q60 11 73 18 L99 31 Q112 37 112 45 Q112 53 99 59 L73 72 Q60 79 47 72 L21 59 Q8 53 8 45Z" fill="${f.c}"/>
+<path d="M22 36 L48 22 Q60 16 72 22 L92 32" fill="none" stroke="${f.hi}" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+<g fill="var(--face)"><circle cx="45" cy="45" r="4.5"/><circle cx="75" cy="45" r="4.5"/><circle cx="46.5" cy="43.5" r="1.4" fill="#fff"/><circle cx="76.5" cy="43.5" r="1.4" fill="#fff"/></g>
+<ellipse cx="36" cy="54" rx="5" ry="3" fill="var(--cheek)"/><ellipse cx="84" cy="54" rx="5" ry="3" fill="var(--cheek)"/>
+<path d="M55 54 Q60 59 65 54" fill="none" stroke="var(--face)" stroke-width="2.5" stroke-linecap="round"/>${f.acc||""}</svg>`}
+const friendGot=g=>Object.keys(MODES).some(m=>S.passed[m+"-"+g]);
 function hanamaru(){
   let d="";const cx=75,cy=75,n=11;
   for(let i=0;i<=n;i++){const a=i/n*Math.PI*2-Math.PI/2,x=cx+50*Math.cos(a),y=cy+50*Math.sin(a);
@@ -353,10 +398,11 @@ const ICON={
   eye:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h6"/></svg>`,
   chart:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-9"/></svg>`,
   star:`<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`,
+  bolt:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`,
   gear:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>`
 };
-const MICON={yomi:ICON.ear,anzan:ICON.head,mitori:ICON.eye};
-const ruby=m=>`<ruby>${MODES[m].kanji}<rt>${MODES[m].kana}</rt></ruby>`;
+const MICON={yomi:ICON.ear,anzan:ICON.head,mitori:ICON.eye,flash:ICON.bolt};
+const ruby=m=>MODES[m].ruby||`<ruby>${MODES[m].kanji}<rt>${MODES[m].kana}</rt></ruby>`;
 function confetti(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const box=document.createElement("div");box.className="confetti";
@@ -375,13 +421,13 @@ let cur="home",selMode="yomi",selGrade="10",recTab="all",chartSel=-1,setTab="yom
 function show(name){
   cur=name;
   for(const s of document.querySelectorAll(".wrap>section"))s.hidden=s.id!=="s-"+name;
-  if(name!=="play"){clearInterval(timerInt);stopSpeech()}
+  if(name!=="play"){clearInterval(timerInt);stopSpeech();stopFlash()}
   rerender();window.scrollTo(0,0);
 }
 function rerender(){({home:renderHome,grade:renderGrade,play:renderPlay,result:()=>{},records:renderRecords,stickers:renderStickers,settings:renderSettings})[cur]()}
 
 /* ---------- home ---------- */
-const TIPS=["きょうも いっしょに がんばろう！","そろばんの じゅんびは いい？","まいにち すこしずつが だいじだよ","まんてんを 3かい とると ごうかく！","シールを ぜんぶ あつめよう！"];
+const TIPS=["きょうも いっしょに がんばろう！","そろばんの じゅんびは いい？","まいにち すこしずつが だいじだよ","まんてんを 3かい とると ごうかく！","シールを ぜんぶ あつめよう！","ごうかくすると あたらしい なかまに あえるよ！"];
 function renderHome(){
   const td=dayTotals(dk(),"all");
   const hi=S.name?`こんにちは、${esc(S.name)}さん！`:"こんにちは！";
@@ -396,7 +442,8 @@ function renderHome(){
 
 /* ---------- grade select ---------- */
 function renderGrade(){
-  const sp=spec(selMode,selGrade);const isV=MODES[selMode].voice;
+  const sp=spec(selMode,selGrade);const isV=MODES[selMode].voice,isF=MODES[selMode].flash;
+  const last=isF?[`${sp.sec}秒`,"ひょうじ"]:isV?[SPEEDS[sp.speed].label,"はやさ"]:[S.settings.mitoriLimit?mmss(S.settings.mitoriLimit):"なし","じかん"];
   const best=S.best[selMode+"-"+selGrade];
   $("#s-grade").innerHTML=`
   <div class="topbar"><button class="ghost" data-act="go" data-to="home">← もどる</button><h2>${ruby(selMode)}</h2></div>
@@ -407,9 +454,10 @@ function renderGrade(){
       <div><b>${digitsText(sp)}</b><span>けた</span></div>
       <div><b>${sp.k}</b><span>くち</span></div>
       <div><b>${sp.sub?"＋−":"＋"}</b><span>${sp.sub?"たし・ひき":"たしざん"}</span></div>
-      <div><b style="font-size:.95rem;line-height:1.9">${isV?SPEEDS[sp.speed].label:(S.settings.mitoriLimit?mmss(S.settings.mitoriLimit):"なし")}</b><span>${isV?"はやさ":"じかん"}</span></div>
+      <div><b style="font-size:.95rem;line-height:1.9">${last[0]}</b><span>${last[1]}</span></div>
     </div>
     <p class="muted" style="margin:0;font-size:.9rem">${S.settings.perSet}もん で 1セット。${best?`じこベスト ${mmss(best)}`:"まんてん 3かいで ごうかく！"}</p>
+    ${isF&&sp.sec*1000/sp.k<150?`<p class="note" style="margin:0">とても はやい せっていです。iPhoneは「低電力モード」を オフにすると ひょうじが ずれにくく なります。</p>`:""}
     <button class="btn big" data-act="start">はじめる</button>
   </div>`;
 }
@@ -420,13 +468,47 @@ function startSession(){
   P={mode:selMode,grade:selGrade,sp,n:S.settings.perSet,i:0,res:[],combo:0,t0:Date.now(),limit:selMode==="mitori"?S.settings.mitoriLimit:0};
   newProblem();show("play");
   clearInterval(timerInt);timerInt=setInterval(tick,250);
+  if(MODES[P.mode].flash)lockWake();
 }
-function newProblem(){P.prob=gen(P.sp);P.input="";P.step=-1;P.qStart=Date.now();P.phase=MODES[P.mode].voice?"ready":"answer";renderPlay()}
+function newProblem(){const m=MODES[P.mode];P.prob=gen(P.sp,m.flash);P.input="";P.step=-1;P.qStart=Date.now();P.phase=m.voice||m.flash?"ready":"answer";renderPlay()}
 async function startReading(){
   const me=P;P.phase="reading";P.step=-1;renderPlay();
   const ok=await readAloud(P.prob,P.sp,i=>{if(P!==me)return;P.step=i;const b=document.querySelectorAll(".beads i");b.forEach((e,j)=>e.classList.toggle("on",j<=i))});
   if(ok&&P===me&&P.phase==="reading"){P.phase="answer";P.qStart=Date.now();renderPlay()}
 }
+/* ---------- flash ---------- */
+// 経過時間から「いま何口目か」を毎フレーム計算するので、遅れが積み重ならない
+let flashId=0,wake=null;
+async function lockWake(){try{if(navigator.wakeLock&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}}catch(e){}}
+function releaseWake(){try{if(wake)wake.release()}catch(e){}wake=null}
+function stopFlash(){flashId++;releaseWake()}
+async function startFlash(){
+  const me=P,id=++flashId,alive=()=>id===flashId&&P===me;
+  if(S.settings.flashCount){
+    P.phase="count";renderPlay();
+    for(const c of["3","2","1"]){if(!alive())return;const el=$("#flashnum");if(el)el.textContent=c;if(S.settings.flashBeep)SFX.cd();await sleep(700)}
+    if(!alive())return;const el=$("#flashnum");if(el)el.textContent="";
+  }
+  P.phase="flashing";renderPlay();
+  await sleep(450);
+  const items=P.prob.items,per=P.sp.sec*1000/items.length,on=per*S.settings.flashOn/100;
+  const done=await new Promise(res=>{
+    let last=-1,shown=-2;const t0=performance.now();
+    const step=now=>{
+      if(!alive())return res(false);
+      const e=now-t0;let i=Math.floor(e/per),vis=e-i*per<on;
+      if(i>last+1){i=last+1;vis=true}// フレームが落ちても1口も飛ばさない
+      if(i>=items.length)return res(true);
+      const want=vis?i:-1;
+      if(want!==shown){shown=want;const el=$("#flashnum");
+        if(el){const it=items[i];el.textContent=vis?(it.sign<0?"−":"")+it.v.toString():"";el.classList.toggle("neg",vis&&it.sign<0)}
+        if(vis){last=i;if(S.settings.flashBeep)SFX.pi()}}
+      requestAnimationFrame(step)};
+    requestAnimationFrame(step);
+  });
+  if(done&&alive()){P.phase="answer";P.qStart=Date.now();renderPlay()}
+}
+const flashCh=sp=>sp.max+(sp.sub?1:0);
 function tick(){
   if(!P||cur!=="play")return;const el=$("#timer");if(!el||P.mode!=="mitori")return;
   const used=(Date.now()-P.t0)/1000;
@@ -445,16 +527,19 @@ function submit(){
   P.res.push({ok,input:P.input,ans,sec:(Date.now()-P.qStart)/1000});
   P.combo=ok?P.combo+1:0;P.phase="judged";sfx(ok?"ok":"ng");renderPlay();
 }
-function next(){P.i++;if(P.i>=P.n)return finish(false);newProblem();if(MODES[P.mode].voice)startReading()}
+function next(){P.i++;if(P.i>=P.n)return finish(false);newProblem();if(MODES[P.mode].voice)startReading();else if(MODES[P.mode].flash)startFlash()}
 function sheet(prob,ansText){
   return`<div class="sheet-wrap"><table class="sheet"><tbody>${prob.items.map((it,i)=>`<tr><td class="no">${i+1}</td><td class="num${it.sign<0?" neg":""}">${it.sign<0?"−":""}${fmt(it.v)}</td></tr>`).join("")}</tbody>
   <tfoot><tr><td class="no">こたえ</td><td class="num ans">${ansText}</td></tr></tfoot></table></div>`}
 function renderPlay(){
   if(!P||!P.prob)return;const m=MODES[P.mode];let stage="",mood="";
-  if(P.phase==="ready"){mood="";stage=`${mascot()}<p class="say">${P.mode==="yomi"?"そろばんを じゅんびしてね":"あたまの そろばんを じゅんびしてね"}</p><button class="btn big" data-act="read">よみあげスタート</button>`}
+  if(P.phase==="ready"&&m.flash){stage=`${mascot()}<p class="say">がめんを よく みてね</p><button class="btn big" data-act="flash">フラッシュスタート</button>`}
+  else if(P.phase==="ready"){mood="";stage=`${mascot()}<p class="say">${P.mode==="yomi"?"そろばんを じゅんびしてね":"あたまの そろばんを じゅんびしてね"}</p><button class="btn big" data-act="read">よみあげスタート</button>`}
+  else if(P.phase==="count"||P.phase==="flashing"){stage=`<div class="board"><div id="flashnum" class="flashnum${P.phase==="count"?" cd":""}" style="--ch:${flashCh(P.sp)}" aria-hidden="true"></div></div>`}
   else if(P.phase==="reading"){mood="m-listen";stage=`${mascot()}<p class="say">よく きいてね</p><div class="beads" aria-label="よみあげ ちゅう">${P.prob.items.map((_,j)=>`<i class="${j<=P.step?"on":""}"></i>`).join("")}</div>`}
   else if(P.phase==="answer"){
     if(m.voice){stage=`${mascot()}<p class="say">こたえを いれてね</p><button class="small-link" data-act="replay">もういちど きく</button>`}
+    else if(m.flash){stage=`${mascot()}<p class="say">こたえを いれてね</p><button class="small-link" data-act="flash">もういちど みる</button>`}
     else stage=sheet(P.prob,P.input?fmt(P.input):"");
   }else{
     const r=P.res[P.res.length-1];mood=r.ok?"m-happy":"m-oops";
@@ -464,13 +549,13 @@ function renderPlay(){
       ${sheet(P.prob,fmt(r.ans))}
       <button class="btn big" data-act="next">${last?"けっかを みる":"つぎへ"}</button></div>`;
   }
-  const showPad=P.phase!=="judged";
+  const showPad=P.phase!=="judged"&&P.phase!=="count"&&P.phase!=="flashing";
   $("#s-play").innerHTML=`
   <div class="playbar"><button class="ghost" data-act="quit">← やめる</button>
     <div class="pb-mid"><b>${m.kanji} ${P.grade}級</b><span>${P.i+1} / ${P.n} もんめ</span></div>
     <div class="timer" id="timer">${P.mode==="mitori"?mmss(P.limit?P.limit-(Date.now()-P.t0)/1000:(Date.now()-P.t0)/1000):""}</div></div>
-  <div class="stage ${mood}">${stage}</div>
-  ${showPad?`${m.voice?`<div class="ansbox" id="ansbox">${P.input?fmt(P.input):""}</div>`:""}
+  ${P.phase==="count"||P.phase==="flashing"?stage:`<div class="stage ${mood}">${stage}</div>`}
+  ${showPad?`${m.voice||m.flash?`<div class="ansbox" id="ansbox">${P.input?fmt(P.input):""}</div>`:""}
   <div class="keypad" aria-disabled="${P.phase!=="answer"}">${["7","8","9","4","5","6","1","2","3"].map(k=>`<button data-act="key" data-k="${k}">${k}</button>`).join("")}
     <button class="fn" data-act="key" data-k="C">ぜんぶけす</button><button data-act="key" data-k="0">0</button><button class="fn" data-act="key" data-k="B">1もじけす</button>
     <button class="go" data-act="submit">こたえる</button></div>`:""}`;
@@ -486,7 +571,7 @@ function pressKey(k){
 
 /* ---------- finish & rewards ---------- */
 function finish(timedOut){
-  clearInterval(timerInt);stopSpeech();
+  clearInterval(timerInt);stopSpeech();stopFlash();
   const p=P;const ok=p.res.filter(r=>r.ok).length,n=p.n,perfect=ok===n&&!timedOut,ratio=ok/n;
   const today=dk();S.days[today]=S.days[today]||{};const d=S.days[today][p.mode]||{n:0,ok:0,sets:0};
   d.n+=n;d.ok+=ok;d.sets++;S.days[today][p.mode]=d;
@@ -496,9 +581,9 @@ function finish(timedOut){
   const got=[];
   const give=()=>{const missing=STICKERS.filter(s=>!S.stickers[s]);const s=missing.length&&Math.random()<.8?missing[rnd(missing.length)]:STICKERS[rnd(STICKERS.length)];S.stickers[s]=(S.stickers[s]||0)+1;got.push(s)};
   if(ratio>=.6)give();if(perfect)give();
-  let passed=false;
+  let passed=false,meet=null;
   if(n>=5){S.run[key]=perfect?(S.run[key]||0)+1:0;
-    if(S.run[key]>=3&&!S.passed[key]){S.passed[key]=today;S.run[key]=0;passed=true;const gi=GR.indexOf(p.grade);if(gi<GR.length-1&&S.grade[p.mode]===p.grade)S.grade[p.mode]=GR[gi+1]}}
+    if(S.run[key]>=3&&!S.passed[key]){meet=friendGot(p.grade)?null:FRIENDS.find(f=>f.g===p.grade);S.passed[key]=today;S.run[key]=0;passed=true;const gi=GR.indexOf(p.grade);if(gi<GR.length-1&&S.grade[p.mode]===p.grade)S.grade[p.mode]=GR[gi+1]}}
   save();
   const stars=perfect?3:ratio>=.8?2:ratio>=.6?1:0;
   const msg=perfect?"まんてん！ すごすぎる！":ratio>=.8?"よく できました！":ratio>=.6?"いいかんじ！ そのちょうし！":"つぎは きっと できるよ！";
@@ -519,15 +604,16 @@ function finish(timedOut){
   <div class="row"><button class="btn sub" style="flex:1" data-act="mode" data-m="${p.mode}">きゅうを かえる</button><button class="btn sub" style="flex:1" data-act="go" data-to="home">ホーム</button></div>`;
   P=null;
   if(perfect){sfx("fan");confetti()}
-  if(passed)setTimeout(()=>certificate(p.mode,p.grade),900);
+  if(passed)setTimeout(()=>certificate(p.mode,p.grade,meet),900);
 }
-function certificate(mode,grade){
+function certificate(mode,grade,meet){
   sfx("fan");confetti();
   $("#layer").innerHTML=`<div class="overlay" role="dialog" aria-modal="true" aria-label="ごうかくしょう"><div class="cert m-happy">
     <h3>ごうかく</h3>${mascot()}
     <p class="who">${S.name?esc(S.name)+" さん":"あなた"}</p>
     <p style="margin:0;font-weight:700">${MODES[mode].kanji} <b style="font-size:1.4rem">${grade}級</b> に<br>ごうかく しました。<br>よく がんばりましたね。</p>
     <p class="muted" style="margin:0;font-size:.85rem">${dk().replace(/-/g,"/")} ・ たまちゃん そろばん道場</p>
+    ${meet?`<p style="margin:0;font-weight:900;color:var(--red)">あたらしい なかまが きたよ！</p>${friendSVG(meet,"friend-new")}<p style="margin:0;font-weight:900">${meet.name}</p>`:""}
     ${grade!=="1"?`<p style="margin:0;font-weight:900">つぎは ${GR[GR.indexOf(grade)+1]}級に チャレンジ！</p>`:""}
     <button class="btn" data-act="closeLayer">やったね！</button></div></div>`;
 }
@@ -574,9 +660,13 @@ function renderRecords(){
 function renderStickers(){
   $("#s-stickers").innerHTML=`
   <div class="topbar"><button class="ghost" data-act="go" data-to="home">← もどる</button><h2>シールちょう</h2></div>
-  <p style="margin:0;font-weight:700">${stickerCount()} / ${STICKERS.length} しゅるい あつめたよ</p>
+  <h3 class="series">たまちゃんの なかま（${FRIENDS.filter(f=>friendGot(f.g)).length} / ${FRIENDS.length}）</h3>
+  <p class="muted" style="margin:0;font-size:.9rem">きゅうに ごうかくすると あえるよ。</p>
+  <div class="friends">${FRIENDS.map(f=>friendGot(f.g)?`<div class="friend got">${friendSVG(f)}${f.name}</div>`:`<div class="friend lock">${friendSVG(f)}${f.g}級で あえる</div>`).join("")}</div>
+  <p style="margin:0;font-weight:700">シール ${stickerCount()} / ${STICKERS.length} しゅるい あつめたよ</p>
   <p class="muted" style="margin:0;font-size:.9rem">6わり いじょう せいかいで 1まい、まんてんなら もう1まい もらえるよ。</p>
-  <div class="stickers">${STICKERS.map(s=>S.stickers[s]?`<div class="got">${s}${S.stickers[s]>1?`<small>×${S.stickers[s]}</small>`:""}</div>`:`<div class="lock">？</div>`).join("")}</div>`;
+  ${SERIES.map(x=>`<h3 class="series">${x.name}（${x.list.filter(s=>S.stickers[s]).length} / ${x.list.length}）</h3>
+  <div class="stickers">${x.list.map(s=>S.stickers[s]?`<div class="got">${s}${S.stickers[s]>1?`<small>×${S.stickers[s]}</small>`:""}</div>`:`<div class="lock">？</div>`).join("")}</div>`).join("")}`;
 }
 
 /* ---------- settings ---------- */
@@ -587,6 +677,7 @@ function renderSettings(){
     <td><input type="number" min="1" max="16" value="${sp.max}" data-tb="max" data-g="${g}" id="tb-${setTab}-${g}-max" aria-label="${g}級 さいだいけた"></td>
     <td><input type="number" min="2" max="30" value="${sp.k}" data-tb="k" data-g="${g}" id="tb-${setTab}-${g}-k" aria-label="${g}級 くちすう"></td>
     <td><input type="checkbox" ${sp.sub?"checked":""} data-tb="sub" data-g="${g}" id="tb-${setTab}-${g}-sub" aria-label="${g}級 ひきざん"></td>
+    ${MODES[setTab].flash?`<td><input type="number" min="0.5" max="60" step="0.1" value="${sp.sec}" data-tb="sec" data-g="${g}" id="tb-${setTab}-${g}-sec" aria-label="${g}級 ひょうじびょうすう"></td>`:""}
     ${MODES[setTab].voice?`<td><select data-tb="speed" data-g="${g}" id="tb-${setTab}-${g}-speed" aria-label="${g}級 はやさ">${Object.keys(SPEEDS).map(k=>`<option value="${k}" ${k===sp.speed?"selected":""}>${SPEEDS[k].label}</option>`).join("")}</select></td>`:""}</tr>`}).join("");
   $("#s-settings").innerHTML=`
   <div class="topbar"><button class="ghost" data-act="go" data-to="home">← もどる</button><h2>せってい</h2></div>
@@ -613,10 +704,18 @@ function renderSettings(){
     <label class="toggle" for="set-sfx">こうかおん<input type="checkbox" id="set-sfx" ${st.sfx?"checked":""}></label>
   </div>
   <div class="card stack">
+    <h3 style="font-size:1.05rem;font-weight:900">フラッシュ暗算</h3>
+    <label class="field" for="set-fon">すうじが みえている ながさ
+      <select id="set-fon">${[[50,"みじかめ（はんぶん）"],[60,"すこし みじかめ"],[70,"ふつう"],[80,"ながめ"]].map(([k,l])=>`<option value="${k}" ${k===st.flashOn?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="toggle" for="set-fbeep">すうじが でるたびに「ピッ」<input type="checkbox" id="set-fbeep" ${st.flashBeep?"checked":""}></label>
+    <label class="toggle" for="set-fcount">3・2・1 の カウントダウン<input type="checkbox" id="set-fcount" ${st.flashCount?"checked":""}></label>
+    <p class="note">1くちの じかん（秒数 ÷ 口数）の うち、すうじを だす わりあいです。のこりは まっくらに して、つぎの すうじとの くぎりに します。</p>
+  </div>
+  <div class="card stack">
     <h3 style="font-size:1.05rem;font-weight:900">きゅうの もんだい（おうちの かた むけ）</h3>
     <p class="note">日珠連の級別の基準が手元で確認できなかったため、いまは仮の値です。教室のプリントや検定の問題に合わせて直してください。</p>
     <div class="tabs">${Object.keys(MODES).map(m=>`<button data-act="stab" data-k="${m}" aria-pressed="${m===setTab}">${MODES[m].kanji}</button>`).join("")}</div>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th></th><th>最小桁</th><th>最大桁</th><th>口数</th><th>減算</th>${MODES[setTab].voice?"<th>速さ</th>":""}</tr></thead><tbody>${tb}</tbody></table></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th></th><th>最小桁</th><th>最大桁</th><th>口数</th><th>減算</th>${MODES[setTab].voice?"<th>速さ</th>":MODES[setTab].flash?"<th>秒数</th>":""}</tr></thead><tbody>${tb}</tbody></table></div>
     <button class="btn sub" data-act="tbreset">${MODES[setTab].kanji}を もとに もどす</button>
   </div>
   <div class="card stack">
@@ -641,6 +740,7 @@ document.addEventListener("click",e=>{
   else if(a==="grade"){selGrade=b.dataset.g;S.grade[selMode]=selGrade;save();renderGrade()}
   else if(a==="start"){startSession()}
   else if(a==="read"||a==="replay"){startReading()}
+  else if(a==="flash"){startFlash()}
   else if(a==="key"){pressKey(b.dataset.k)}
   else if(a==="submit"){submit()}
   else if(a==="next"){next()}
@@ -669,9 +769,13 @@ document.addEventListener("change",e=>{
   else if(el.id==="set-per")st.perSet=+el.value;
   else if(el.id==="set-limit")st.mitoriLimit=+el.value;
   else if(el.id==="set-sfx")st.sfx=el.checked;
+  else if(el.id==="set-fon")st.flashOn=+el.value;
+  else if(el.id==="set-fbeep")st.flashBeep=el.checked;
+  else if(el.id==="set-fcount")st.flashCount=el.checked;
   else if(el.dataset.tb){
-    const g=el.dataset.g,cur0=spec(setTab,g);let val=el.type==="checkbox"?el.checked:el.tagName==="SELECT"?el.value:Math.round(+el.value);
-    if(typeof val==="number"){const lim=el.dataset.tb==="k"?[2,30]:[1,16];val=Math.max(lim[0],Math.min(lim[1],val||lim[0]))}
+    const g=el.dataset.g,cur0=spec(setTab,g),f=el.dataset.tb;
+    let val=el.type==="checkbox"?el.checked:el.tagName==="SELECT"?el.value:f==="sec"?Math.round(+el.value*10)/10:Math.round(+el.value);
+    if(typeof val==="number"){const lim=f==="k"?[2,30]:f==="sec"?[.5,60]:[1,16];val=Math.max(lim[0],Math.min(lim[1],val||lim[0]))}
     const nx={...cur0,[el.dataset.tb]:val};if(nx.min>nx.max){if(el.dataset.tb==="min")nx.max=nx.min;else nx.min=nx.max}
     S.table[setTab]=S.table[setTab]||{};S.table[setTab][g]=nx;save();renderSettings();return;
   }else return;
@@ -684,6 +788,12 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="Enter"){if(P.phase==="answer")submit();else if(P.phase==="judged")next()}
 });
 
+// 表示中にアプリを切りかえたら、その問題は最初から見なおす
+document.addEventListener("visibilitychange",()=>{
+  if(cur!=="play"||!P||!MODES[P.mode].flash)return;
+  if(!document.hidden)lockWake();
+  else if(P.phase==="count"||P.phase==="flashing"){flashId++;P.phase="ready";renderPlay()}
+});
 if(hasTTS){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 show("home");
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
